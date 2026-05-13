@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agro AI Crop Analyzer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="root">
+  <!-- LOGO -->
+  <div class="logo">
+    <img class="logo-img" src="{{ url_for('static', filename='logo.png') }}" alt="plant icon" />
+    <div class="logo-text">Agro AI</div>
+  </div>
+
+  <!-- ANALYZER CARD -->
+  <div class="analyzer">
+
+    <!-- TITLE -->
+    <div class="title-wrap">
+      <div class="main-title">Crop Analyzer</div>
+      <div class="sub-title">Fill all the details Correctly </div>
+    </div>
+
+    <!-- INPUTS -->
+    <div class="inputs">
+
+      <div class="field">
+        <div class="field-label"><span class="req">*  </span>Nitrogen</div>
+        <div class="field-input-wrap">
+          <input class="field-input" type="number" id="f_n" placeholder="Enter the amount of nitrogen in soil" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><span class="req">*  </span>Phosphorous</div>
+        <div class="field-input-wrap">
+          <input class="field-input" type="number" id="f_p" placeholder="Enter the amount of Phosphorous in soil" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><span class="req">*  </span>Potassium</div>
+        <div class="field-input-wrap">
+          <input class="field-input" type="number" id="f_k" placeholder="Enter the amount of Potassium in soil" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><span class="req">*  </span>Temperature</div>
+        <div class="field-input-wrap">
+          <input class="field-input" type="number" id="f_t" placeholder="Enter avg. Temperature in your area" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><span class="req">*  </span>Humidity</div>
+        <div class="field-input-wrap">
+          <input class="field-input" type="number" id="f_h" placeholder="Enter the amount of Humidity in your area" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><span class="req">*  </span>Ph- level</div>
+        <div class="field-input-wrap">
+          <input class="field-input" type="number" id="f_ph" placeholder="Enter the amount of ph - level in soil" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><span class="req">*  </span>Rainfall</div>
+        <div class="field-input-wrap">
+          <input class="field-input" type="number" id="f_r" placeholder="Enter the amount of Rainfall in your area" />
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ANALYZER BAR -->
+  <div class="analyzer-bar" id="analyzeBar">
+    <div class="analyzer-text" id="analyzeText">Analyze</div>
+  </div>
+
+  <!-- RESULT (shown after prediction) -->
+  <div class="result-box" id="resultBox">
+    <div class="result-label">Recommended Crop</div>
+    <div class="result-title" id="resultCrop"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="" />
+  </div>
+
+</div>
+</body>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const btn = document.getElementById("analyzeBar");
+    const resultBox = document.getElementById("resultBox");
+    const resultCrop = document.getElementById("resultCrop");
+    const analyzeText = document.getElementById("analyzeText");
+
+    console.log("JS Loaded");
+
+    btn.addEventListener("click", function () {
+
+        console.log("Button Clicked");
+
+        // Collect and convert to numbers
+        const data = {
+            n: Number(document.getElementById("f_n").value),
+            p: Number(document.getElementById("f_p").value),
+            k: Number(document.getElementById("f_k").value),
+            temperature: Number(document.getElementById("f_t").value),
+            humidity: Number(document.getElementById("f_h").value),
+            ph: Number(document.getElementById("f_ph").value),
+            rainfall: Number(document.getElementById("f_r").value)
+        };
+
+        console.log("Sending Data:", data);
+
+        // Validation: check empty or invalid values
+        if (Object.values(data).some(v => isNaN(v) || v === 0)) {
+            alert("⚠️ Please fill all fields with valid values!");
+            return;
+        }
+
+        // Show loading
+        analyzeText.innerText = "Analyzing...";
+        btn.style.pointerEvents = "none";
+
+        fetch("/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error("Server error");
+            }
+            return res.json();
+        })
+        .then(result => {
+            console.log("Result:", result);
+
+            // Show result
+            resultBox.style.display = "block";
+            resultCrop.innerText = result.prediction;
+
+            // Reset button
+            analyzeText.innerText = "Analyze";
+            btn.style.pointerEvents = "auto";
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            alert("❌ Something went wrong. Check console.");
+
+            // Reset button
+            analyzeText.innerText = "Analyze";
+            btn.style.pointerEvents = "auto";
+        });
+
+    });
+
+});
+</script>
+</html>
